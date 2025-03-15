@@ -9,7 +9,7 @@ app.use(morgan('dev'));
 app.use(cors());
 app.use(express.json());
 
-const superAdmin = require('./routes/superadminRoutes');
+const superAdmin = require('./routes/superAdminRoutes');
 const authenticate = require('./routes/userRoutes');
 const agent = require('./routes/agentRoutes');
 const location = require('./routes/locationRoutes');
