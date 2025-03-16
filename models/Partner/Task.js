@@ -64,6 +64,10 @@ const taskSchema = new mongoose.Schema(
     is_deleted: {
       type: Boolean,
       default: false
+    },
+    customer_rating: {
+      type: Number,
+      default: 0
     }
   },
   { timestamps: true }

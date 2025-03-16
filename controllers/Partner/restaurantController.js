@@ -108,7 +108,8 @@ const getRestaurants = asyncHandler(async (req, res) => {
       'pincode',
       'category',
       'discount',
-      'customer_rating'
+      'customer_rating',
+      'location_id'
     ];
 
     // Filter out only the allowed fields from the query parameters
@@ -118,40 +119,90 @@ const getRestaurants = asyncHandler(async (req, res) => {
       }
     }
 
-    // Fetch restaurants with the specified fields and apply the query filters
-    const restaurants = await Restaurant.find(query)
-      .populate({
-        path: 'user_id',
-        select: 'name email is_deleted',
-        match: { is_deleted: false } // Filter users where is_deleted is false
-      })
-      .populate('location_id', 'name')
-      .lean();
+    // If is_deleted is in the query, we need to filter by the owner's is_deleted status
+    if (req.query.is_deleted !== undefined) {
+      const isDeleted = req.query.is_deleted === 'true'; // Convert string to boolean
+      console.log('is deleted', isDeleted);
+      // Fetch restaurants with the specified fields and apply the query filters
+      const restaurants = await Restaurant.find(query)
+        .populate({
+          path: 'user_id',
+          select: 'name email is_deleted',
+          match: { is_deleted: isDeleted } // Filter users where is_deleted matches the query
+        })
+        .populate('location_id', 'name')
+        .lean();
+      console.log(restaurants);
+      // Filter out restaurants where user_id is null (due to the match condition)
+      const filteredRestaurants = restaurants.filter(
+        (restaurant) => restaurant.user_id !== null
+      );
 
-    // Flatten user and location details into each restaurant object
-    const detailedRestaurants = restaurants.map((restaurant) => {
-      const userDetails = restaurant.user_id;
-      const locationDetails = restaurant.location_id;
+      // Flatten user and location details into each restaurant object
+      const detailedRestaurants = filteredRestaurants.map((restaurant) => {
+        const userDetails = restaurant.user_id;
+        const locationDetails = restaurant.location_id;
 
-      // Extract relevant fields from user and location details
-      const { name: userName, email: userEmail } = userDetails;
-      const { name: locationName } = locationDetails;
+        // Extract relevant fields from user and location details
+        const { name: userName, email: userEmail } = userDetails;
+        const { name: locationName } = locationDetails;
 
-      // Flatten the restaurant object
-      const flattenedRestaurant = {
-        ...restaurant,
-        user_name: userName,
-        user_email: userEmail,
-        location_name: locationName,
-        // Remove nested objects
-        user_id: undefined,
-        location_id: undefined
-      };
+        // Flatten the restaurant object
+        const flattenedRestaurant = {
+          ...restaurant,
+          user_name: userName,
+          user_email: userEmail,
+          location_name: locationName,
+          // Remove nested objects
+          user_id: undefined,
+          location_id: undefined
+        };
 
-      return flattenedRestaurant;
-    });
+        return flattenedRestaurant;
+      });
 
-    res.json(detailedRestaurants);
+      res.json(detailedRestaurants);
+    } else {
+      // If is_deleted is not in the query, proceed without filtering by is_deleted
+      const restaurants = await Restaurant.find(query)
+        .populate({
+          path: 'user_id',
+          select: 'name email is_deleted',
+          match: { is_deleted: false } // Default filter: only non-deleted users
+        })
+        .populate('location_id', 'name')
+        .lean();
+
+      // Filter out restaurants where user_id is null (due to the match condition)
+      const filteredRestaurants = restaurants.filter(
+        (restaurant) => restaurant.user_id !== null
+      );
+
+      // Flatten user and location details into each restaurant object
+      const detailedRestaurants = filteredRestaurants.map((restaurant) => {
+        const userDetails = restaurant.user_id;
+        const locationDetails = restaurant.location_id;
+
+        // Extract relevant fields from user and location details
+        const { name: userName, email: userEmail } = userDetails;
+        const { name: locationName } = locationDetails;
+
+        // Flatten the restaurant object
+        const flattenedRestaurant = {
+          ...restaurant,
+          user_name: userName,
+          user_email: userEmail,
+          location_name: locationName,
+          // Remove nested objects
+          user_id: undefined,
+          location_id: undefined
+        };
+
+        return flattenedRestaurant;
+      });
+
+      res.json(detailedRestaurants);
+    }
   } catch (error) {
     console.error('Error fetching restaurants:', error); // Log the error for debugging
     res.status(500).json({ error: error.message });

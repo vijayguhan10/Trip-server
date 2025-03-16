@@ -72,6 +72,7 @@ const loginUser = async (req, res) => {
 const getUserProfileById = async (req, res) => {
   try {
     // Find user by ID (exclude password) and convert to plain JS object.
+    console.log(req.user);
     const user = await User.findById(req.user._id).select('-password').lean();
     if (!user) {
       return res.status(404).json({ message: 'User not found' });

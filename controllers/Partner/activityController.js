@@ -100,7 +100,7 @@ const registerActivity = asyncHandler(async (req, res) => {
 const getActivities = asyncHandler(async (req, res) => {
   try {
     // Build the query object from request query parameters
-    const query = {}; // Default filter for is_deleted
+    const query = {};
     const allowedFields = [
       'business_name',
       'owner_name',
@@ -108,7 +108,8 @@ const getActivities = asyncHandler(async (req, res) => {
       'pincode',
       'category',
       'discount',
-      'customer_rating'
+      'customer_rating',
+      'location_id'
     ];
 
     // Filter out only the allowed fields from the query parameters
@@ -118,44 +119,93 @@ const getActivities = asyncHandler(async (req, res) => {
       }
     }
 
-    // Add the default filter for is_deleted
+    // If is_deleted is in the query, filter by the user's is_deleted status
+    if (req.query.is_deleted !== undefined) {
+      const isDeleted = req.query.is_deleted === 'true'; // Convert string to boolean
+      console.log('is deleted', isDeleted);
 
-    // Fetch activities with all fields and apply the query filters
-    const activities = await Activity.find(query)
-      .populate('user_id', 'name email') // Populate specific fields of the user
-      .populate('location_id', 'name') // Populate specific fields of the location
-      .lean();
+      // Fetch activities with all fields and apply the query filters
+      const activities = await Activity.find(query)
+        .populate({
+          path: 'user_id',
+          select: 'name email',
+          match: { is_deleted: isDeleted } // Filter users where is_deleted matches the query
+        })
+        .populate('location_id', 'name')
+        .lean();
 
-    // Flatten user and location details into each activity object
-    const detailedActivities = activities.map((activity) => {
-      const userDetails = activity.user_id;
-      const locationDetails = activity.location_id;
+      console.log(activities);
 
-      // Extract relevant fields from user and location details
-      const {
-        name: userName,
-        email: userEmail,
-        ...otherUserDetails
-      } = userDetails;
-      const { name: locationName, ...otherLocationDetails } = locationDetails;
+      // Filter out activities where user_id is null (due to the match condition)
+      const filteredActivities = activities.filter(
+        (activity) => activity.user_id !== null
+      );
 
-      // Flatten the activity object
-      const flattenedActivity = {
-        ...activity,
-        user_name: userName,
-        user_email: userEmail,
-        location_name: locationName,
-        user_details: otherUserDetails, // Include other user details
-        location_details: otherLocationDetails, // Include other location details
-        // Remove nested objects
-        user_id: undefined,
-        location_id: undefined
-      };
+      // Flatten user and location details into each activity object
+      const detailedActivities = filteredActivities.map((activity) => {
+        const userDetails = activity.user_id;
+        const locationDetails = activity.location_id;
 
-      return flattenedActivity;
-    });
+        // Extract relevant fields from user and location details
+        const { name: userName, email: userEmail } = userDetails;
+        const { name: locationName } = locationDetails;
 
-    res.json(detailedActivities);
+        // Flatten the activity object
+        const flattenedActivity = {
+          ...activity,
+          user_name: userName,
+          user_email: userEmail,
+          location_name: locationName,
+          // Remove nested objects
+          user_id: undefined,
+          location_id: undefined
+        };
+
+        return flattenedActivity;
+      });
+
+      res.json(detailedActivities);
+    } else {
+      // If is_deleted is not in the query, proceed without filtering by is_deleted
+      const activities = await Activity.find(query)
+        .populate({
+          path: 'user_id',
+          select: 'name email',
+          match: { is_deleted: false } // Default filter: only non-deleted users
+        })
+        .populate('location_id', 'name')
+        .lean();
+
+      // Filter out activities where user_id is null (due to the match condition)
+      const filteredActivities = activities.filter(
+        (activity) => activity.user_id !== null
+      );
+
+      // Flatten user and location details into each activity object
+      const detailedActivities = filteredActivities.map((activity) => {
+        const userDetails = activity.user_id;
+        const locationDetails = activity.location_id;
+
+        // Extract relevant fields from user and location details
+        const { name: userName, email: userEmail } = userDetails;
+        const { name: locationName } = locationDetails;
+
+        // Flatten the activity object
+        const flattenedActivity = {
+          ...activity,
+          user_name: userName,
+          user_email: userEmail,
+          location_name: locationName,
+          // Remove nested objects
+          user_id: undefined,
+          location_id: undefined
+        };
+
+        return flattenedActivity;
+      });
+
+      res.json(detailedActivities);
+    }
   } catch (error) {
     console.error('Error fetching activities:', error); // Log the error for debugging
     res.status(500).json({ error: error.message });

@@ -97,7 +97,7 @@ const registerShop = asyncHandler(async (req, res) => {
 const getShops = asyncHandler(async (req, res) => {
   try {
     // Build the query object from request query parameters
-    const query = {}; // Default filter for is_deleted
+    const query = {};
     const allowedFields = [
       'business_name',
       'owner_name',
@@ -105,7 +105,8 @@ const getShops = asyncHandler(async (req, res) => {
       'pincode',
       'category',
       'discount',
-      'customer_rating'
+      'customer_rating',
+      'location_id'
     ];
 
     // Filter out only the allowed fields from the query parameters
@@ -115,42 +116,88 @@ const getShops = asyncHandler(async (req, res) => {
       }
     }
 
-    // Fetch shops with all fields and apply the query filters
-    const shops = await Shop.find(query)
-      .populate('user_id') // Populate all fields of the user
-      .populate('location_id') // Populate all fields of the location
-      .lean();
+    // If is_deleted is in the query, filter by the user's is_deleted status
+    if (req.query.is_deleted !== undefined) {
+      const isDeleted = req.query.is_deleted === 'true'; // Convert string to boolean
 
-    // Flatten user and location details into each shop object
-    const detailedShops = shops.map((shop) => {
-      const userDetails = shop.user_id;
-      const locationDetails = shop.location_id;
+      // Fetch shops with all fields and apply the query filters
+      const shops = await Shop.find(query)
+        .populate({
+          path: 'user_id',
+          select: 'name email',
+          match: { is_deleted: isDeleted } // Filter users where is_deleted matches the query
+        })
+        .populate('location_id', 'name')
+        .lean();
 
-      // Extract relevant fields from user and location details
-      const {
-        name: userName,
-        email: userEmail,
-        ...otherUserDetails
-      } = userDetails;
-      const { name: locationName, ...otherLocationDetails } = locationDetails;
+      console.log(shops);
 
-      // Flatten the shop object
-      const flattenedShop = {
-        ...shop,
-        user_name: userName,
-        user_email: userEmail,
-        location_name: locationName,
-        user_details: otherUserDetails, // Include other user details
-        location_details: otherLocationDetails, // Include other location details
-        // Remove nested objects
-        user_id: undefined,
-        location_id: undefined
-      };
+      // Filter out shops where user_id is null (due to the match condition)
+      const filteredShops = shops.filter((shop) => shop.user_id !== null);
 
-      return flattenedShop;
-    });
+      // Flatten user and location details into each shop object
+      const detailedShops = filteredShops.map((shop) => {
+        const userDetails = shop.user_id;
+        const locationDetails = shop.location_id;
 
-    res.json(detailedShops);
+        // Extract relevant fields from user and location details
+        const { name: userName, email: userEmail } = userDetails;
+        const { name: locationName } = locationDetails;
+
+        // Flatten the shop object
+        const flattenedShop = {
+          ...shop,
+          user_name: userName,
+          user_email: userEmail,
+          location_name: locationName,
+          // Remove nested objects
+          user_id: undefined,
+          location_id: undefined
+        };
+
+        return flattenedShop;
+      });
+
+      res.json(detailedShops);
+    } else {
+      // If is_deleted is not in the query, proceed without filtering by is_deleted
+      const shops = await Shop.find(query)
+        .populate({
+          path: 'user_id',
+          select: 'name email',
+          match: { is_deleted: false } // Default filter: only non-deleted users
+        })
+        .populate('location_id', 'name')
+        .lean();
+
+      // Filter out shops where user_id is null (due to the match condition)
+      const filteredShops = shops.filter((shop) => shop.user_id !== null);
+
+      // Flatten user and location details into each shop object
+      const detailedShops = filteredShops.map((shop) => {
+        const userDetails = shop.user_id;
+        const locationDetails = shop.location_id;
+
+        // Extract relevant fields from user and location details
+        const { name: userName, email: userEmail } = userDetails;
+        const { name: locationName } = locationDetails;
+
+        // Flatten the shop object
+        const flattenedShop = {
+          ...shop,
+          user_name: userName,
+          user_email: userEmail,
+          location_name: locationName,
+          // Remove nested objects
+          user_id: undefined,
+          location_id: undefined
+        };
+
+        return flattenedShop;
+      });
+
+      res.json(detailedShops);
+    }
   } catch (error) {
     console.error('Error fetching shops:', error); // Log the error for debugging
     res.status(500).json({ error: error.message });

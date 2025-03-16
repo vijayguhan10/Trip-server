@@ -9,9 +9,6 @@ const {
 } = require('../controllers/Partner/activityController');
 const { authMiddleware } = require('../middleware/authMiddleware');
 
-// @desc    Register a new activity
-// @route   POST /api/activities
-// @access  Private
 router.post('/', registerActivity);
 
 // @desc    Get all activities

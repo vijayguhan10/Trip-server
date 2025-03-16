@@ -23,9 +23,7 @@ const activitySchema = new mongoose.Schema(
     },
     title: { type: String, trim: true },
     description: { type: String },
-    single_line_address: { type: String },
-    discount: { type: Number, default: 0 },
-    customer_rating: { type: Number, default: 0 }
+    single_line_address: { type: String }
   },
   { timestamps: true }
 );

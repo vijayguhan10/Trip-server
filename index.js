@@ -23,6 +23,8 @@ const activity = require('./routes/activityRoutes');
 const dish = require('./routes/dishRoutes');
 const product = require('./routes/productRoutes');
 const task = require('./routes/taskRoutes');
+const review = require('./routes/reviewRoutes');
+const reservation = require('./routes/reservationRoutes');
 
 app.use('/api/superadmin', superAdmin);
 app.use('/api/auth', authenticate);
@@ -38,6 +40,8 @@ app.use('/api/activities', activity);
 app.use('/api/dish', dish);
 app.use('/api/product', product);
 app.use('/api/task', task);
+app.use('/api/review', review);
+app.use('/api/reservation', reservation);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

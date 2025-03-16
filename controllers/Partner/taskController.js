@@ -77,9 +77,32 @@ const getAllTasks = async (req, res) => {
       query.status = status;
     }
 
-    // Fetch tasks based on the constructed query
-    const tasks = await Task.find(query);
-    res.status(200).json(tasks);
+    // Fetch tasks based on the constructed query and populate the activity details
+    const tasks = await Task.find(query).populate({
+      path: 'activity_id',
+      select: 'business_name city pincode address single_line_address' // Select only the required fields
+    });
+
+    // Transform the tasks to include business details at the same level
+    const transformedTasks = tasks.map((task) => {
+      const businessDetails = task.activity_id
+        ? {
+            business_name: task.activity_id.business_name,
+            city: task.activity_id.city,
+            pincode: task.activity_id.pincode,
+            address: task.activity_id.address,
+            single_line_address: task.activity_id.single_line_address
+          }
+        : {};
+
+      return {
+        ...task.toObject(),
+        ...businessDetails,
+        activity_id: undefined // Remove the nested activity_id object
+      };
+    });
+
+    res.status(200).json(transformedTasks);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
