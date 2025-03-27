@@ -126,7 +126,6 @@ const updateDestination = async (req, res) => {
         .status(200)
         .json({ message: 'Destination deleted successfully' });
     }
-
     const updatedData = {};
     if (updates.place_name) updatedData.place_name = updates.place_name;
     if (updates.location_id) {

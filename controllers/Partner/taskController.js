@@ -1,6 +1,5 @@
 const Task = require('../../models/Partner/Task');
 
-// Create a new task
 const createTask = async (req, res) => {
   console.log(req.body);
   try {
@@ -37,13 +36,10 @@ const createTask = async (req, res) => {
   }
 };
 
-// Get all tasks
 const getAllTasks = async (req, res) => {
   try {
-    // Initialize an empty query object
     let query = {};
 
-    // Extract query parameters from the request
     const {
       name,
       activity_id,
@@ -54,9 +50,8 @@ const getAllTasks = async (req, res) => {
       status
     } = req.query;
 
-    // Add filters based on query parameters
     if (name) {
-      query.name = { $regex: name, $options: 'i' }; // Case-insensitive search
+      query.name = { $regex: name, $options: 'i' };
     }
     if (activity_id) {
       query.activity_id = activity_id;
@@ -77,13 +72,11 @@ const getAllTasks = async (req, res) => {
       query.status = status;
     }
 
-    // Fetch tasks based on the constructed query and populate the activity details
     const tasks = await Task.find(query).populate({
       path: 'activity_id',
-      select: 'business_name city pincode address single_line_address' // Select only the required fields
+      select: 'business_name city pincode address single_line_address'
     });
 
-    // Transform the tasks to include business details at the same level
     const transformedTasks = tasks.map((task) => {
       const businessDetails = task.activity_id
         ? {
@@ -98,7 +91,7 @@ const getAllTasks = async (req, res) => {
       return {
         ...task.toObject(),
         ...businessDetails,
-        activity_id: undefined // Remove the nested activity_id object
+        activity_id: undefined
       };
     });
 
@@ -108,7 +101,6 @@ const getAllTasks = async (req, res) => {
   }
 };
 
-// Get a single task by ID
 const getTaskById = async (req, res) => {
   try {
     const task = await Task.findById(req.params.id);
@@ -121,7 +113,6 @@ const getTaskById = async (req, res) => {
   }
 };
 
-// Update a task by ID
 const updateTask = async (req, res) => {
   try {
     const task = await Task.findById(req.params.id);
@@ -148,7 +139,6 @@ const updateTask = async (req, res) => {
   }
 };
 
-// Delete a task by ID
 const deleteTask = async (req, res) => {
   try {
     const task = await Task.findById(req.params.id);

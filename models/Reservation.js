@@ -45,6 +45,10 @@ const reservationSchema = new mongoose.Schema(
     is_deleted: {
       type: Boolean,
       default: false
+    },
+    advance_Amt: {
+      type: Number,
+      default: 0
     }
   },
   { timestamps: true }

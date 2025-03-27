@@ -21,12 +21,7 @@ const {
 const router = express.Router();
 
 // SuperAdmin Signup (Assuming only another SuperAdmin can create a new one)
-router.post(
-  '/signup',
-  authMiddleware,
-  authorizeRoles('SuperAdmin'),
-  signupSuperAdmin
-);
+router.post('/signup', signupSuperAdmin);
 
 // Get reviewed (completed) registrations
 router.post(

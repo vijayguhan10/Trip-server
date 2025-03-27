@@ -2,12 +2,10 @@ const asyncHandler = require('express-async-handler');
 const Reservation = require('../../models/Reservation');
 const Task = require('../../models/Partner/Task');
 
-// ✅ 1. Get reservation by Booking ID
 const getReservationByBookingId = asyncHandler(async (req, res) => {
   const booking_id = req.user._id;
 
   try {
-    // Fetch the reservation
     const reservation = await Reservation.findOne({
       booking_id,
       is_deleted: false
@@ -19,7 +17,6 @@ const getReservationByBookingId = asyncHandler(async (req, res) => {
 
     let businessDetails = null;
 
-    // Fetch business details based on the type
     if (reservation.type === 'Task') {
       businessDetails = await Task.findById(reservation.business_id);
     } else if (reservation.type === 'Restaurant') {
@@ -36,7 +33,6 @@ const getReservationByBookingId = asyncHandler(async (req, res) => {
   }
 });
 
-// ✅ 2. Get reservations by Business ID
 const getReservationsByBusinessId = asyncHandler(async (req, res) => {
   const { business_id, type } = req.params;
 
@@ -44,17 +40,14 @@ const getReservationsByBusinessId = asyncHandler(async (req, res) => {
     let reservations = [];
 
     if (type === 'Task') {
-      // Fetch all tasks related to the activity
       const tasks = await Task.find({ activity_id: business_id });
       const taskIds = tasks.map((task) => task._id);
 
-      // Fetch reservations for all related tasks
       reservations = await Reservation.find({
         task_id: { $in: taskIds },
         is_deleted: false
       });
     } else {
-      // Fetch reservations directly for Restaurant
       reservations = await Reservation.find({
         task_id: business_id,
         is_deleted: false
@@ -69,25 +62,19 @@ const getReservationsByBusinessId = asyncHandler(async (req, res) => {
   }
 });
 
-// ✅ 3. Create a new Reservation
 const createReservation = asyncHandler(async (req, res) => {
   try {
-    console.log(req.body, req.user);
+    const { business_id, totalMembers, date, bookedTime, type, advance_Amt } =
+      req.body;
 
-    // Destructure request body
-    const { business_id, totalMembers, date, bookedTime, type } = req.body;
-
-    // Validate required fields
     if (!business_id || !totalMembers || !date || !bookedTime || !type) {
       return res.status(400).json({ error: 'All fields are required' });
     }
 
-    // Ensure user is authenticated
     if (!req.user || !req.user._id) {
       return res.status(401).json({ error: 'Unauthorized user' });
     }
 
-    // Create new reservation
     const booking_id = req.user._id;
     const newReservation = new Reservation({
       booking_id,
@@ -96,10 +83,10 @@ const createReservation = asyncHandler(async (req, res) => {
       bookedTime,
       type,
       date,
+      advance_Amt: advance_Amt ? advance_Amt : 0,
       status: 'Pending'
     });
 
-    // Save to DB
     await newReservation.save();
 
     res.status(201).json(newReservation);
@@ -111,7 +98,6 @@ const createReservation = asyncHandler(async (req, res) => {
   }
 });
 
-// ✅ 4. Update Reservation
 const updateReservation = asyncHandler(async (req, res) => {
   const { reservation_id } = req.params;
 
@@ -134,7 +120,6 @@ const updateReservation = asyncHandler(async (req, res) => {
   }
 });
 
-// ✅ 5. Soft Delete Reservation
 const deleteReservation = asyncHandler(async (req, res) => {
   const { reservation_id } = req.params;
 

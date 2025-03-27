@@ -16,7 +16,7 @@ const router = express.Router();
 
 router.post('/create', authMiddleware, authorizeRoles('Agent'), createBooking);
 router.post('/verify', verifyBooking);
-router.get('/:id', authMiddleware, getBooking);
+router.get('/profile', authMiddleware, getBooking);
 router.get('/', authMiddleware, getAllBookings);
 router.put('/:id', authMiddleware, authorizeRoles('Agent'), updateBooking);
 router.delete('/:id', authMiddleware, authorizeRoles('Agent'), deleteBooking);

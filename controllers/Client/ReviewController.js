@@ -5,7 +5,6 @@ const Activity = require('../../models/Partner/Activity');
 const Task = require('../../models/Partner/Task');
 const Booking = require('../../models/Booking');
 
-// Helper function to calculate average rating
 const calculateAverageRating = async (businessId, businessType) => {
   let reviews = [];
 
@@ -26,7 +25,6 @@ const createReview = async (req, res) => {
   const booking_id = req.user._id;
 
   try {
-    // Validate business type and existence
     let business;
     switch (business_type) {
       case 'Restaurant':
@@ -46,7 +44,6 @@ const createReview = async (req, res) => {
       return res.status(404).json({ error: 'Business not found.' });
     }
 
-    // Create the review
     const review = new Review({
       booking_id,
       business_id,
@@ -58,7 +55,6 @@ const createReview = async (req, res) => {
 
     await review.save();
 
-    // Calculate and update the average rating for the business
     const averageRating = await calculateAverageRating(
       business_id,
       business_type
@@ -74,7 +70,6 @@ const createReview = async (req, res) => {
   }
 };
 
-// Get all reviews for a business
 const getReviewsForBusiness = async (req, res) => {
   const { business_id, business_type } = req.params;
 
@@ -82,17 +77,14 @@ const getReviewsForBusiness = async (req, res) => {
     let reviews = [];
 
     if (business_type === 'Task') {
-      // Fetch all tasks related to the given activity (business_id)
       const tasks = await Task.find({ activity_id: business_id }).select('_id');
       const taskIds = tasks.map((task) => task._id);
 
-      // Fetch reviews for all tasks where business_id matches task._id
       reviews = await Review.find({
         business_id: { $in: taskIds },
         business_type: 'Task'
       }).populate('booking_id', 'name email phone_number');
     } else {
-      // Fetch reviews for Restaurant or Shop using the provided business_id
       reviews = await Review.find({
         business_id,
         business_type
@@ -107,7 +99,6 @@ const getReviewsForBusiness = async (req, res) => {
   }
 };
 
-// Delete a review (soft delete)
 const deleteReview = async (req, res) => {
   const { review_id } = req.params;
 
@@ -117,18 +108,15 @@ const deleteReview = async (req, res) => {
       return res.status(404).json({ error: 'Review not found.' });
     }
 
-    // Soft delete the review
     review.is_deleted = true;
     await review.save();
 
-    // Recalculate the average rating for the business
     const averageRating = await calculateAverageRating(
       review.business_id,
       review.business_type
     );
 
     if (review.business_type === 'Task') {
-      // Update the parent Activity's rating
       const task = await Task.findById(review.business_id);
       if (task) {
         const activity = await Activity.findById(task.activity_id);
@@ -138,7 +126,6 @@ const deleteReview = async (req, res) => {
         }
       }
     } else {
-      // Update the Restaurant or Shop's rating
       let business;
       switch (review.business_type) {
         case 'Restaurant':

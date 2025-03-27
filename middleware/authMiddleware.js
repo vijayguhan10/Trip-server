@@ -6,13 +6,13 @@ const authMiddleware = (req, res, next) => {
     return res.status(401).json({ error: 'Access denied. No token provided.' });
   }
 
-  const token = authHeader.split(' ')[1]; // Extract the token after "Bearer "
-
+  const token = authHeader.split(' ')[1];
   try {
     const decoded = jwt.verify(
       token,
       process.env.JWT_SECRET || 'your_jwt_secret_key'
     );
+    console.log(decoded);
     if (decoded.role != 'booking') {
       req.user = {
         _id: decoded._id,
@@ -31,7 +31,6 @@ const authMiddleware = (req, res, next) => {
   }
 };
 
-// Role-Based Authorization Middleware
 const authorizeRoles = (...allowedRoles) => {
   return (req, res, next) => {
     if (!req.user || !allowedRoles.includes(req.user.role)) {

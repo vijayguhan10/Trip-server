@@ -2,12 +2,10 @@ const mongoose = require('mongoose');
 const ThingsToCarry = require('../../models/ThingsToCarry');
 const Location = require('../../models/Location');
 
-// ✅ Add things to carry for a location (SuperAdmin only)
 const addThingsToCarry = async (req, res) => {
   try {
     const { name, location_id } = req.body;
 
-    // Ensure only SuperAdmin can perform this action
     if (req.user.role !== 'SuperAdmin') {
       return res.status(403).json({ message: 'Unauthorized' });
     }
@@ -39,7 +37,6 @@ const addThingsToCarry = async (req, res) => {
   }
 };
 
-// ✅ Get things to carry for a location
 const getThingsToCarry = async (req, res) => {
   try {
     const { location_id } = req.params;
@@ -67,7 +64,6 @@ const getThingsToCarry = async (req, res) => {
   }
 };
 
-// ✅ Update things to carry (SuperAdmin only)
 const updateThingsToCarry = async (req, res) => {
   try {
     const { location_id, item_id } = req.params;
@@ -107,7 +103,6 @@ const updateThingsToCarry = async (req, res) => {
   }
 };
 
-// ✅ Delete things to carry (SuperAdmin only) - DELETE from DB
 const deleteThingsToCarry = async (req, res) => {
   try {
     const { location_id, item_id } = req.params;

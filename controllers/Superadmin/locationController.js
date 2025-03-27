@@ -1,6 +1,5 @@
 const Location = require('../../models/Location');
 
-// Create a new Location
 const createLocation = async (req, res) => {
   try {
     const { name, map_url, iframe_url } = req.body;
@@ -20,7 +19,6 @@ const createLocation = async (req, res) => {
   }
 };
 
-// Get a single Location by ID
 const getLocation = async (req, res) => {
   try {
     const location = await Location.findById(req.params.id);
@@ -35,7 +33,6 @@ const getLocation = async (req, res) => {
   }
 };
 
-// Get all Locations (excluding deleted ones)
 const getAllLocations = async (req, res) => {
   try {
     const locations = await Location.find({ is_deleted: false }).sort({
@@ -48,7 +45,6 @@ const getAllLocations = async (req, res) => {
   }
 };
 
-// Update a Location by ID
 const updateLocation = async (req, res) => {
   try {
     const allowedUpdates = ['name', 'map_url', 'iframe_url'];
@@ -76,7 +72,6 @@ const updateLocation = async (req, res) => {
   }
 };
 
-// Soft Delete a Location by ID
 const deleteLocation = async (req, res) => {
   try {
     const location = await Location.findById(req.params.id);
@@ -96,7 +91,6 @@ const deleteLocation = async (req, res) => {
   }
 };
 
-// Dropdown API - Get list of Locations with only id and name
 const getLocationDropdown = async (req, res) => {
   try {
     const locations = await Location.find({ is_deleted: false }).select(

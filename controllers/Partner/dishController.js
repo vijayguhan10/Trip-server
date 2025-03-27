@@ -1,6 +1,5 @@
 const Dish = require('../../models/Partner/Dish');
 
-// Create a new dish
 const createDish = async (req, res) => {
   try {
     const {
@@ -33,13 +32,10 @@ const createDish = async (req, res) => {
   }
 };
 
-// Get all dishes
 const getAllDishes = async (req, res) => {
   try {
-    // Initialize an empty query object
     let query = {};
 
-    // Extract query parameters from the request
     const {
       name,
       category,
@@ -50,9 +46,8 @@ const getAllDishes = async (req, res) => {
       restaurant_id
     } = req.query;
 
-    // Add filters based on query parameters
     if (name) {
-      query.name = { $regex: name, $options: 'i' }; // Case-insensitive search
+      query.name = { $regex: name, $options: 'i' };
     }
     if (category) {
       query.category = category;
@@ -73,14 +68,13 @@ const getAllDishes = async (req, res) => {
       query.restaurant_id = restaurant_id;
     }
 
-    // Fetch dishes based on the constructed query
     const dishes = await Dish.find(query);
     res.status(200).json(dishes);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
-// Get a single dish by ID
+
 const getDishById = async (req, res) => {
   try {
     const dish = await Dish.findById(req.params.id);
@@ -93,7 +87,6 @@ const getDishById = async (req, res) => {
   }
 };
 
-// Update a dish by ID
 const updateDish = async (req, res) => {
   try {
     const dish = await Dish.findById(req.params.id);
@@ -121,7 +114,6 @@ const updateDish = async (req, res) => {
   }
 };
 
-// Delete a dish by ID
 const deleteDish = async (req, res) => {
   try {
     const dish = await Dish.findById(req.params.id);

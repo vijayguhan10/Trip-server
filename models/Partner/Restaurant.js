@@ -25,7 +25,16 @@ const restaurantSchema = new mongoose.Schema(
     customer_rating: { type: Number, default: 0 },
     category: {
       type: [String],
-      enum: ['lunch', 'dinner', 'fastfood', 'chat', 'snacks', 'all'],
+      enum: [
+        'lunch',
+        'dinner',
+        'fastfood',
+        'chat',
+        'snacks',
+        'all',
+        'non-veg',
+        'veg'
+      ],
       required: true
     },
     discount: { type: Number, default: 0, min: 0, max: 100 },

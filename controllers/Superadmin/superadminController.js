@@ -19,21 +19,17 @@ const generateToken = (user) => {
   );
 };
 
-// SuperAdmin Signup
 const signupSuperAdmin = async (req, res) => {
   try {
     const { name, email, phone_number, password } = req.body;
 
-    // Check if SuperAdmin already exists
     const existingSuperAdmin = await User.findOne({ role: 'SuperAdmin' });
     if (existingSuperAdmin) {
       return res.status(400).json({ error: 'A SuperAdmin already exists!' });
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create User entry
     const user = new User({
       name,
       email,
@@ -45,14 +41,12 @@ const signupSuperAdmin = async (req, res) => {
 
     await user.save();
 
-    // Create SuperAdmin entry and link with User
     const superAdmin = new SuperAdmin({
       user_id: user._id
     });
 
     await superAdmin.save();
 
-    // Generate JWT token
     const token = generateToken(user);
 
     res
@@ -69,10 +63,9 @@ const getReviewCompletedData = async (req, res) => {
   try {
     const skipValue = index * limit;
 
-    // Fetch only approved users excluding SuperAdmins
     const CompleteData = await User.find({
       isNew: false,
-      role: { $ne: 'SuperAdmin' } // Exclude SuperAdmins
+      role: { $ne: 'SuperAdmin' }
     })
       .select('-password')
       .skip(skipValue)
@@ -88,7 +81,6 @@ const getReviewCompletedData = async (req, res) => {
   }
 };
 
-// Fetch pending registrations
 const getYetToBeReviewedData = async (req, res) => {
   const index = 0,
     limit = 50;
@@ -96,12 +88,11 @@ const getYetToBeReviewedData = async (req, res) => {
   try {
     const skipValue = index * limit;
 
-    // Fetch Users who are 'isNew: true'
     const users = await User.find({ isNew: true })
-      .select('-password') // Exclude password
+      .select('-password')
       .skip(skipValue)
       .limit(limit)
-      .lean(); // Convert to plain objects for better performance
+      .lean();
 
     if (users.length === 0) {
       return res
@@ -109,7 +100,6 @@ const getYetToBeReviewedData = async (req, res) => {
         .json({ message: 'No records available', data: [] });
     }
 
-    // Fetch role-specific details and merge them into a flat structure
     const processedData = await Promise.all(
       users.map(async (user) => {
         let roleData = {};
@@ -132,11 +122,9 @@ const getYetToBeReviewedData = async (req, res) => {
             break;
         }
 
-        // Remove `_id` and `user_id` from role-specific data
         delete roleData._id;
         delete roleData.user_id;
 
-        // Merge User details and Role-based details into a single object
         return { ...user, ...roleData };
       })
     );
@@ -151,7 +139,6 @@ const reviewRegistration = async (req, res) => {
   const { id, isapproved } = req.body;
 
   try {
-    // Find user by ID
     const user = await User.findById(id);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -162,7 +149,6 @@ const reviewRegistration = async (req, res) => {
       await user.save();
       return res.status(200).json({ message: 'User successfully approved' });
     } else {
-      // Delete user and respective role-based document
       switch (user.role) {
         case 'Agent':
           await Agent.findOneAndDelete({ user_id: user._id });
@@ -180,7 +166,6 @@ const reviewRegistration = async (req, res) => {
           return res.status(400).json({ message: 'Invalid user role' });
       }
 
-      // Delete the user itself
       await User.findByIdAndDelete(id);
       return res
         .status(200)

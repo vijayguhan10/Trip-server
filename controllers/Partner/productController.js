@@ -1,6 +1,6 @@
 const Product = require('../../models/Partner/Product');
 
-// Create a new product
+
 const createProduct = async (req, res) => {
   console.log(req.body);
   try {
@@ -31,23 +31,23 @@ const createProduct = async (req, res) => {
   }
 };
 
-// Get all products
+
 const getAllProducts = async (req, res) => {
   try {
-    // Initialize an empty query object
+    
     let query = {};
 
-    // Extract query parameters from the request
+    
     const { name, category, minPrice, maxPrice, filter, is_deleted, shop_id } =
       req.query;
 
     if (!shop_id) {
-      return res.status(400).json({ error: 'Shop Id is missing' }); // Return to stop further execution
+      return res.status(400).json({ error: 'Shop Id is missing' }); 
     }
 
-    // Add filters based on query parameters
+    
     if (name) {
-      query.name = { $regex: name, $options: 'i' }; // Case-insensitive search
+      query.name = { $regex: name, $options: 'i' }; 
     }
     if (category) {
       query.category = category;
@@ -64,9 +64,9 @@ const getAllProducts = async (req, res) => {
     if (is_deleted !== undefined) {
       query.is_deleted = is_deleted === 'true';
     }
-    query.shop_id = shop_id; // shop_id is now guaranteed to be present
+    query.shop_id = shop_id; 
 
-    // Fetch products based on the constructed query
+    
     const products = await Product.find(query);
     console.log(products);
     res.status(200).json(products);
@@ -75,7 +75,7 @@ const getAllProducts = async (req, res) => {
   }
 };
 
-// Get a single product by ID
+
 const getProductById = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
@@ -88,7 +88,7 @@ const getProductById = async (req, res) => {
   }
 };
 
-// Update a product by ID
+
 const updateProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
@@ -116,7 +116,7 @@ const updateProduct = async (req, res) => {
   }
 };
 
-// Delete a product by ID
+
 const deleteProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
