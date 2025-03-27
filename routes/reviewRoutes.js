@@ -5,7 +5,7 @@ const {
   createReview,
   getReviewsForBusiness,
   deleteReview
-} = require('../controllers/Client/reviewController');
+} = require('../controllers/Client/ReviewController');
 
 // Create a review (accessible to authenticated users)
 router.post('/', authMiddleware, createReview);
