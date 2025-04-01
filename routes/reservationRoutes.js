@@ -2,7 +2,7 @@ const express = require('express');
 const { authMiddleware } = require('../middleware/authMiddleware');
 const router = express.Router();
 const {
-  getReservationByBookingId,
+  getReservationsByBookingId,
   getReservationsByBusinessId,
   createReservation,
   updateReservation,
@@ -12,7 +12,7 @@ const {
 // ✅ Create a new reservation
 router.post('/book', authMiddleware, createReservation);
 
-router.get('/', authMiddleware, getReservationByBookingId);
+router.get('/', authMiddleware, getReservationsByBookingId);
 
 router.get('/business/:business_id/:type', getReservationsByBusinessId);
 

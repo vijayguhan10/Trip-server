@@ -15,7 +15,6 @@ const loginUser = async (req, res) => {
     if (role == 'Activities') {
       role = 'Activity';
     }
-    console.log(req.body);
     let user;
     if (email) {
       user = await User.findOne({
@@ -30,8 +29,6 @@ const loginUser = async (req, res) => {
         is_deleted: false
       });
     }
-
-    console.log(user);
 
     if (!user) {
       return res
@@ -52,11 +49,31 @@ const loginUser = async (req, res) => {
         .json({ message: 'Invalid email/phone or password' });
     }
 
-    const token = jwt.sign(
-      { _id: user._id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: '1h' }
-    );
+    const tokenData = {
+      _id: user._id,
+      role: user.role
+    };
+
+    if (user.role !== 'SuperAdmin') {
+      const roleModel =
+        user.role === 'Agent'
+          ? Agent
+          : user.role === 'Shop'
+          ? Shop
+          : user.role === 'Restaurant'
+          ? Restaurant
+          : Activity;
+
+      const roleData = await roleModel.findOne({ user_id: user._id });
+      if (!roleData) {
+        return res.status(400).json({ message: 'Role data not found' });
+      }
+      tokenData.business_id = roleData._id;
+    }
+
+    const token = jwt.sign(tokenData, process.env.JWT_SECRET, {
+      expiresIn: '1h'
+    });
 
     res.status(200).json({ message: 'Login successful', token, user });
   } catch (error) {
@@ -66,7 +83,6 @@ const loginUser = async (req, res) => {
 
 const getUserProfileById = async (req, res) => {
   try {
-    console.log(req.user);
     const user = await User.findById(req.user._id).select('-password').lean();
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -93,7 +109,6 @@ const getUserProfileById = async (req, res) => {
       default:
         return res.status(400).json({ error: 'Invalid role specified' });
     }
-
     const roleData = await roleModel.findOne({ user_id: user._id }).lean();
     if (!roleData) {
       return res.status(200).json(user);
@@ -206,9 +221,6 @@ const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
     let updateData = { ...req.body };
-
-    console.log('Request Body:', updateData);
-
     delete updateData._id;
 
     const user = await User.findById(id);
@@ -248,7 +260,7 @@ const updateUser = async (req, res) => {
         error: 'Password change requires current password and new password'
       });
     }
-
+    console.log('USER DATA: ', userUpdate);
     const updatedUser = await User.findByIdAndUpdate(id, userUpdate, {
       new: true
     }).select('-password');
@@ -271,10 +283,13 @@ const updateUser = async (req, res) => {
         default:
           return res.status(400).json({ error: 'Invalid role specified' });
       }
-
-      await roleModel.findOneAndUpdate({ user_id: id }, roleUpdate, {
-        new: true
-      });
+      const response = await roleModel.findOneAndUpdate(
+        { user_id: id },
+        roleUpdate,
+        {
+          new: true
+        }
+      );
     }
 
     res

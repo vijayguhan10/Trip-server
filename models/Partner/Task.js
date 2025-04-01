@@ -68,7 +68,8 @@ const taskSchema = new mongoose.Schema(
     customer_rating: {
       type: Number,
       default: 0
-    }
+    },
+    canReserve: { type: Boolean, default: false }
   },
   { timestamps: true }
 );

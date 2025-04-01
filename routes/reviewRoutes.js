@@ -11,7 +11,11 @@ const {
 router.post('/', authMiddleware, createReview);
 
 // Get all reviews for a business (accessible to everyone)
-router.get('/:business_type/:business_id', getReviewsForBusiness);
+router.get(
+  '/:business_type/:business_id',
+  authMiddleware,
+  getReviewsForBusiness
+);
 
 // Delete a review (accessible to authenticated users)
 router.delete('/:review_id', authMiddleware, deleteReview);

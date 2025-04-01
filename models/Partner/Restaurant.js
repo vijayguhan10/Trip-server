@@ -44,7 +44,8 @@ const restaurantSchema = new mongoose.Schema(
       closingTime: { type: String, default: '' }
     },
     description: { type: String, default: '' },
-    map_url: { type: String, default: '' }
+    map_url: { type: String, default: '' },
+    canReserve: { type: Boolean, default: false }
   },
   { timestamps: true }
 );

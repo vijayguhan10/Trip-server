@@ -12,7 +12,6 @@ const authMiddleware = (req, res, next) => {
       token,
       process.env.JWT_SECRET || 'your_jwt_secret_key'
     );
-    console.log(decoded);
     if (decoded.role != 'booking') {
       req.user = {
         _id: decoded._id,
