@@ -75,6 +75,7 @@ const verifyBooking = async (req, res) => {
     const tokenPayload = {
       id: booking._id,
       role: 'booking',
+      email: booking.email,
       location_id: booking.location_id,
       agent_logo: agent.logo // Adding the agent's logo to the token payload
     };
